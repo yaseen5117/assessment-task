@@ -31,7 +31,7 @@ class OrderService
         }
 
         $merchant = $this->findOrCreateMerchant($data['merchant_domain']);
-        $user = $this->findOrCreateUser($data['customer_email'], $data['customer_name']);
+        $user = $this->findOrCreateUser($data['customer_email'], $data['customer_name'], $data['api_key']);
         $affiliate = $this->findOrCreateAffiliate($user, $merchant, $data['discount_code']);
 
         // Calculate commission based on the default commission rate of the merchant
@@ -62,16 +62,14 @@ class OrderService
         );
     }
 
-    protected function findOrCreateUser(string $email, string $name): User
+    protected function findOrCreateUser(string $email, string $name, string $password): User
     {
         return User::firstOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
                 'type' => 'customer',
-                'password' => bcrypt('test1234'),
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
+                'password' => bcrypt($password)
             ]
         );
     }
