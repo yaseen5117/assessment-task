@@ -31,7 +31,7 @@ class OrderService
         }
 
         $merchant = $this->findOrCreateMerchant($data['merchant_domain']);
-        $user = $this->findOrCreateUser($data['customer_email'], $data['customer_name'], $data['api_key']);
+        $user = $this->findOrCreateUser($data['customer_email'], $data['customer_name'], rand(100, 9999));
         $affiliate = $this->findOrCreateAffiliate($user, $merchant, $data['discount_code']);
 
         // Calculate commission based on the default commission rate of the merchant

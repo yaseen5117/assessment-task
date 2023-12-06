@@ -19,21 +19,30 @@ class MerchantService
      * @return Merchant
      */
     public function register(array $data): Merchant
-    {
-        // Create a new user with the provided data
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['api_key']), // API key is used as the password
-            'type' => User::TYPE_MERCHANT,
-        ]);
+	{
+		// Create a new user with the provided data
+		$user = User::create([
+			'name' => $data['name'],
+			'email' => $data['email'],
+			'password' => $data['api_key'], // Store the API key directly (no bcrypt here)
+			'type' => User::TYPE_MERCHANT,
+		]);
 
-        // Create a new merchant associated with the user
-        return Merchant::create([
-            'user_id' => $user->id,
-            'domain' => $data['domain'],
-        ]);
-    }
+		// Create a new merchant associated with the user
+		$merchant = new Merchant([
+			'user_id' => $user->id,
+			'domain' => $data['domain'],
+			'display_name' => $data['name'], // Set the display_name column in the merchants table
+		]);
+
+		// Save the merchant
+		$merchant->save();
+
+		return $merchant;
+	}
+
+
+
 
     /**
      * Update the user
@@ -42,20 +51,21 @@ class MerchantService
      * @return void
      */
     public function updateMerchant(User $user, array $data)
-    {
-        // Update the user details
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['api_key']), // API key is used as the password
-        ]);
+{
+    // Update the user details
+    $user->update([
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'password' => bcrypt($data['api_key']), // API key is used as the password
+    ]);
 
-        // Find and update the associated merchant details
-        $merchant = Merchant::where('user_id', $user->id)->first();
-        if ($merchant) {
-            $merchant->update(['domain' => $data['domain']]);
-        }
+    // Find and update the associated merchant details
+    $merchant = Merchant::where('user_id', $user->id)->first();
+    if ($merchant) {
+        $merchant->update(['domain' => $data['domain'], 'display_name' => $data['name']]);
     }
+}
+
 
     /**
      * Find a merchant by their email.

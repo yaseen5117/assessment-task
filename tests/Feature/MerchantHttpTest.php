@@ -54,6 +54,7 @@ class MerchantHttpTest extends TestCase
 
         $response = $this->actingAs($this->merchant->user)
             ->json('GET', route('merchant.order-stats'), compact('from', 'to'));
+ 
 
         $this->assertEquals($between->count(), $response['count']);
         $this->assertEquals($between->sum('subtotal'), $response['revenue']);
