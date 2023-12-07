@@ -11,7 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class PayoutOrderJob implements ShouldQueue
 {
@@ -24,8 +24,7 @@ class PayoutOrderJob implements ShouldQueue
      */
     public function __construct(
         public Order $order
-    ) {
-    }
+    ) {}
 
     /**
      * Use the API service to send a payout of the correct amount.
@@ -35,14 +34,19 @@ class PayoutOrderJob implements ShouldQueue
      */
     public function handle(ApiService $apiService)
     {
-        try {
-            $apiService->sendPayout($this->order->customer_email, $this->order->subtotal);
+        // Use a database transaction to ensure data consistency
+        DB::transaction(function () use ($apiService) {
+            try {
+                // Send payout using ApiService
+                $apiService->sendPayout($this->order->affiliate->user->email, $this->order->commission_owed);
 
-            // If the payout is successful, update the order status to paid
-            $this->order->update(['payout_status' => Order::STATUS_PAID]);
-        } catch (\Exception $e) {
-            Log::error('Error processing payout: ' . $e->getMessage());
-            $this->order->update(['payout_status' => Order::STATUS_UNPAID]);
-        }
+                // Mark the order as paid in the database
+                $this->order->update(['payout_status' => Order::STATUS_PAID]);
+            } catch (RuntimeException $e) {
+                // In case of exception, rollback and rethrow the exception
+                DB::rollBack();
+                throw $e;
+            }
+        });
     }
 }

@@ -37,6 +37,11 @@ class ApiService
      */
     public function sendPayout(string $email, float $amount)
     {
-        //
+        // Simulate a successful payout
+        if (rand(0, 1) === 1) {
+        } else {
+            // Simulate a failed payout
+            throw new RuntimeException('Payout failed: Simulated error');
+        }
     }
 }
